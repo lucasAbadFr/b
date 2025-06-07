@@ -116,9 +116,75 @@ fn test_01_syntax_error() {
 
 #[test]
 fn test_02_undefined_identifier() {
-    let expected = "tests/diagnostics/b_codes/02_undefined_identifier.b:18:5: ERROR: could not find name `d`";
+    let expected = "tests/diagnostics/b_codes/02_undefined_identifier.b:19:5: ERROR: could not find name `d`";
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/02_undefined_identifier.b"]);
 
     assert_eq!(output, expected.to_string());
+} 
+
+/*
+ * The complier doesn't treat this case, so I intentionally wrote an expected
+ * statement to make the test fail.
+ *
+ * We can address this issue in two ways:
+ *    1. Letting the code as is wich is close to GCC diagnostic report.
+ *        > error: ‘This’ undeclared (first use in this function)
+ *
+ *    2. Improving the diagnostic to have a nice warning like Clang.
+ *        > warning: '\/\*' within block comment [-Wcomment]
+ *
+ * Note: Funnily, here we need to escape the comment character because
+ *       otherwise `rustc` will complain about unclosed nested comments.
+ */
+#[test]
+fn test_03_nested_comment() {
+    let expected = "tests/03_nested_comment.b:28:12: warning: '/*' inside block comment — nested comments are not allowed";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/03_nested_comment.b"]);
+    
+    assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic not supported, see code comments for more details");
 }
+
+#[test]
+fn test_04_eof_comment() {
+    let expected = "tests/diagnostics/b_codes/04_eof_comment.b:23:2: Expected start of a primary expression but got end of file";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/04_eof_comment.b"]);
+
+    assert_eq!(output, expected.to_string());
+}
+/*
+ * The compiler does not find any fault if a string is not terminated by a `\n`
+ * character. 
+ *
+ * According to the B Reference Manual :
+ *     a = "this is a very *
+ *          long string without a new-line";
+ *     b = "this is a very*n*
+ *          long string that contains a new-line";
+ *     c = "this will get
+ *          a warning";
+ *
+ * Note: In our case the escape character is `\` not `*` for C compatibility.
+ */
+#[test]
+fn test_05_newline_constant() {
+    let expected = "tests/diagnostics/b_codes/05_newline_constant.b:23:1: warning: newline in constant not preceded by '*'"; // or `/`
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/05_newline_constant.b"]);
+    
+    /*
+     * TMP: Clean-up generated files.
+     */
+    
+    let _: Output = Command::new("rm")
+        .args(["tests/diagnostics/b_codes/05_newline_constant.asm",
+               "tests/diagnostics/b_codes/05_newline_constant.o",
+               "tests/diagnostics/b_codes/05_newline_constant"])
+        .output()
+        .expect("Deleted generated files");
+
+    assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic not supported, see code comments for more details");
+}
+

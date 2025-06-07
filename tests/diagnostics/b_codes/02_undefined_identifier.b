@@ -9,6 +9,7 @@
  * the last line of the function being compiled.
  *
  */
+
 main() {
     auto a, b, c;
     
