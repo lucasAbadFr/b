@@ -27,7 +27,7 @@
  **** COMMENTS ***
  *
  *     The comparison of outputs is currently done by raw string equality,
- *     which is fragile for the reasons listed above (formatting, platform
+ *     which is fragile for the reasons listed bellow (formatting, platform
  *     differences). However, it is a good first step and will be refined over
  *     time.
  *
@@ -124,7 +124,7 @@ fn test_02_undefined_identifier() {
 } 
 
 /*
- * The complier doesn't treat this case, so I intentionally wrote an expected
+ * The compiler doesn't treat this case, so I intentionally wrote an expected
  * statement to make the test fail.
  *
  * We can address this issue in two ways:
@@ -186,5 +186,21 @@ fn test_05_newline_constant() {
         .expect("Deleted generated files");
 
     assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic not supported, see code comments for more details");
+}
+
+
+/*
+ * The compiler is able to detect the problem but throw an ambigous message:
+ *      > ERROR: expected `;`, but got integer literal
+ *
+ * The message should be more specific to help users understand the root issue.
+ */
+#[test]
+fn test_06_invalid_octal() {
+    let expected = "tests/diagnostics/b_codes/06_invalid_octal.b:21:12: ERROR: invalid octal constant, digits must be in range 0-7";
+    
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/06_invalid_octal.b"]);
+
+    assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic is wrong, see code comments for more details");
 }
 
