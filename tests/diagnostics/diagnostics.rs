@@ -155,8 +155,8 @@ fn test_04_eof_comment() {
     assert_eq!(output, expected.to_string());
 }
 /*
- * The compiler does not find any fault if a string is not terminated by a `\n`
- * character. 
+ * The compiler does not find any fault if a string line is not terminated by
+ * a `\n` or `\` character. 
  *
  * According to the B Reference Manual :
  *     a = "this is a very *
@@ -170,20 +170,17 @@ fn test_04_eof_comment() {
  */
 #[test]
 fn test_05_newline_constant() {
-    let expected = "tests/diagnostics/b_codes/05_newline_constant.b:23:1: warning: newline in constant not preceded by '*'"; // or `/`
+    let expected = "tests/diagnostics/b_codes/05_newline_constant.b:23:1: warning: newline in constant not preceded by '*'"; // or `\`
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/05_newline_constant.b"]);
     
     /*
      * TMP: Clean-up generated files.
      */
-    
-    let _: Output = Command::new("rm")
-        .args(["tests/diagnostics/b_codes/05_newline_constant.asm",
-               "tests/diagnostics/b_codes/05_newline_constant.o",
-               "tests/diagnostics/b_codes/05_newline_constant"])
-        .output()
-        .expect("Deleted generated files");
+    for ext in [".asm", ".o", ""] {
+        let path = format!("tests/diagnostics/b_codes/05_newline_constant{}", ext);
+        let _ = std::fs::remove_file(&path);
+    }
 
     assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic not supported, see code comments for more details");
 }
@@ -204,3 +201,78 @@ fn test_06_invalid_octal() {
     assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic is wrong, see code comments for more details");
 }
 
+/*
+ * The compiler isn't able to detect the problem as the Lexer fails before it 
+ *     > LEXER ERROR: Character literal contains more than two characters
+ *
+ * I don't know yet how to address this case — either tuning the lexer to
+ * support character constants up to 4 characters long, or simply acknowledging
+ * that such wide character constants are unsupported.
+ */
+#[test]
+fn test_07_invalid_character_const() {
+    let expected = "tests/diagnostics/b_codes/07_invalid_character_const.b:20:14: ERROR: character constant too long, maximum length is 4 characters";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/07_invalid_character_const.b"]);
+
+    assert_eq!(output, expected.to_string(), "Expecting failure - Lexer fails, see code comments for more details");
+}
+
+/*
+ * The compiler isn't able to detect the problem as the Lexer fails before it 
+ *     > LEXER ERROR: Unknown token `
+ * or for the other possible syntax
+ *     > LEXER ERROR: Unknown token $
+ *
+ * Since BCD is a non-standardized, legacy encoding related to ASCII, it's
+ * unclear if this case should be supported. We need to decide whether to be
+ * strictly compliant with the B Reference Manual or allow a more modern
+ * version of B.
+ */
+#[test]
+fn test_08_invalid_bcd_const() {
+    let expected = "tests/diagnostics/b_codes/08_invalid_bcd_constant.b:30:16: ERROR: BCD constant too long, maximum 6 characters allowed";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/08_invalid_bcd_const.b"]);
+
+    assert_eq!(output, expected.to_string(), "Expecting failure - Lexer fails, see code comments for more details");   
+}
+
+/* 
+ * The compiler isn't able to detect the problem as the Lexer fails before it 
+ *     > LEXER ERROR: Unknown token .
+ *
+ * As is, the compiler doen't seem to support float.
+ */
+#[test]
+fn test_09_invalid_float_const() {
+    let expected = "tests/diagnostics/b_codes/09_invalid_float_const.b:22:16: ERROR: exponent too large in constant, value out of range for target platform";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/09_invalid_float_const.b"]);
+
+    assert_eq!(output, expected.to_string(), "Expecting failure - Lexer fails, see code comments for more details"); 
+}
+
+/*
+ * The compiler does not check for zero division at all. Even hardcoding it
+ * doesn't raise a warning and even worse it compile leading to a blatantly
+ * erronous executablme that fails with: 
+ *     > Floating point exception (core dumped)
+ */ 
+#[test]
+fn test_10_zero_division() {
+    let expected = "tests/diagnostics/b_codes/10_zero_division.b:28:15: ERROR: detected division by zero";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/10_zero_division.b"]);
+
+    /*
+     * TMP: Clean-up generated files.
+     */
+    
+    for ext in [".asm", ".o", ""] {
+        let path = format!("tests/diagnostics/b_codes/10_zero_division{}", ext);
+        let _ = std::fs::remove_file(&path);
+    }
+
+    assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic not supported, see code comments for more details"); 
+}
