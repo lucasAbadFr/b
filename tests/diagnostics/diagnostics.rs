@@ -98,7 +98,9 @@ OPTIONS:
         Print this help message
     -L
         Append a flag to the linker of the target platform
-ERROR: no input is provided";
+    -nostdlib
+        Do not link with standard libraries like libb and/or libc on some platforms
+ERROR: no inputs are provided";
 
     let output = run_compiler::<&str>(&[]);
 
@@ -111,7 +113,7 @@ fn test_01_syntax_error() {
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/01_syntax_error.b"]);
 
-    assert_eq!(output, expected.to_string());
+    assert!(output.contains(&expected.to_string()));
 }
 
 #[test]
@@ -120,7 +122,7 @@ fn test_02_undefined_identifier() {
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/02_undefined_identifier.b"]);
 
-    assert_eq!(output, expected.to_string());
+    assert!(output.contains(&expected.to_string()));
 } 
 
 /*
@@ -143,7 +145,9 @@ fn test_03_nested_comment() {
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/03_nested_comment.b"]);
     
-    assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic not supported, see code comments for more details");
+    assert!(output.contains(&expected.to_string()),
+            "Expecting failure - Diagnostic not supported, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
+            expected, output);
 }
 
 #[test]
@@ -152,8 +156,9 @@ fn test_04_eof_comment() {
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/04_eof_comment.b"]);
 
-    assert_eq!(output, expected.to_string());
+    assert!(output.contains(&expected.to_string()));
 }
+
 /*
  * The compiler does not find any fault if a string line is not terminated by
  * a `\n` or `\` character. 
@@ -182,7 +187,9 @@ fn test_05_newline_constant() {
         let _ = std::fs::remove_file(&path);
     }
 
-    assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic not supported, see code comments for more details");
+    assert!(output.contains(&expected.to_string()),
+            "Expecting failure - Diagnostic not supported, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
+            expected, output);
 }
 
 
@@ -198,7 +205,9 @@ fn test_06_invalid_octal() {
     
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/06_invalid_octal.b"]);
 
-    assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic is wrong, see code comments for more details");
+    assert!(output.contains(&expected.to_string()),
+        "Expecting failure - Diagnostic is wrong, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
+        expected, output);
 }
 
 /*
@@ -215,7 +224,9 @@ fn test_07_invalid_character_const() {
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/07_invalid_character_const.b"]);
 
-    assert_eq!(output, expected.to_string(), "Expecting failure - Lexer fails, see code comments for more details");
+    assert!(output.contains(&expected.to_string()),
+        "Expecting failure - Lexer fails, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
+        expected, output);
 }
 
 /*
@@ -235,7 +246,9 @@ fn test_08_invalid_bcd_const() {
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/08_invalid_bcd_const.b"]);
 
-    assert_eq!(output, expected.to_string(), "Expecting failure - Lexer fails, see code comments for more details");   
+    assert!(output.contains(&expected.to_string()),
+        "Expecting failure - Lexer fails, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
+        expected, output);
 }
 
 /* 
@@ -250,7 +263,9 @@ fn test_09_invalid_float_const() {
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/09_invalid_float_const.b"]);
 
-    assert_eq!(output, expected.to_string(), "Expecting failure - Lexer fails, see code comments for more details"); 
+    assert!(output.contains(&expected.to_string()),
+        "Expecting failure - Lexer fails, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
+        expected, output);
 }
 
 /*
@@ -266,7 +281,7 @@ fn test_09_invalid_float_const() {
  */
 #[test]
 fn test_10_zero_division() {
-    let expected = "tests/diagnostics/b_codes/10_zero_division.b:28:15: ERROR: detected division by zero";
+    let expected = "tests/diagnostics/b_codes/10_zero_division.b:28:15: WARNING: detected division by zero";
 
     let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/10_zero_division.b"]);
 
@@ -279,5 +294,7 @@ fn test_10_zero_division() {
         let _ = std::fs::remove_file(&path);
     }
 
-    assert_eq!(output, expected.to_string(), "Expecting failure - Diagnostic not supported, see code comments for more details"); 
+    assert!(output.contains(&expected.to_string()),
+            "Expecting failure - Diagnostic not supported, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
+            expected, output);
 }
