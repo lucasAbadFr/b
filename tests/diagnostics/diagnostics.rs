@@ -298,3 +298,25 @@ fn test_10_zero_division() {
             "Expecting failure - Diagnostic not supported, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
             expected, output);
 }
+
+/*
+ * This diagnostic (`invalid & prefix`) is ambiguous and poorly documented
+ * in the reference manual. It seems to overlap with other, more consistent
+ * errors such as:
+ *     > ERROR: cannot take the address of an rvalue
+ *
+ * For more details, please refer to the test code and the reference manual.
+ * 
+ * I will mark this test as #[ignore].
+ */
+#[ignore]
+#[test]
+fn test_11_invalid_ampersand_prefix() {
+    let expected = "tests/diagnostics/b_codes/11_invalid_ampersand_prefix.b:36:5: ERROR: invalid `&` prefix";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/11_invalid_ampersand_prefix.b"]);
+
+    assert!(output.contains(&expected.to_string()),
+            "Expecting failure - Diagnostic not supported, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
+            expected, output);
+}
