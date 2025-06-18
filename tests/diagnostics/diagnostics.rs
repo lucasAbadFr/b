@@ -258,7 +258,12 @@ fn test_09_invalid_float_const() {
  * doesn't raise a warning and even worse it compile leading to a blatantly
  * erronous executablme that fails with: 
  *     > Floating point exception (core dumped)
- */ 
+ *
+ * From my observation for C, clang and gcc detect a hardcoded zero division
+ * and throw a warning.
+ * For the case of the denominator being a substraction resulting in `0` only
+ * Clang seem to detect it. As for Rust, `rustc` detect both cases.
+ */
 #[test]
 fn test_10_zero_division() {
     let expected = "tests/diagnostics/b_codes/10_zero_division.b:28:15: ERROR: detected division by zero";
