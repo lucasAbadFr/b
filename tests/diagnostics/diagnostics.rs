@@ -320,3 +320,34 @@ fn test_11_invalid_ampersand_prefix() {
             "Expecting failure - Diagnostic not supported, see code comments for more details\nWe expect:\n\t{}\n\nBut got  :\n\t{}",
             expected, output);
 }
+
+#[test]
+fn test_12_warning_auto_increment() {
+    let expected = "tests/diagnostics/b_codes/12_warning_auto_increment.b:19:5: ERROR: cannot increment an rvalue
+tests/diagnostics/b_codes/12_warning_auto_increment.b:20:5: ERROR: cannot decrement an rvalue";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/12_warning_auto_increment.b"]);
+
+    assert!(output.contains(&expected.to_string()));
+}
+
+
+/*
+ * This diagnostic originally existed for compatibility with older terminals
+ * and restricted keyboards that couldn't type characters like '{', '[', or '|'.
+ *
+ * For a modern B implementation, such compatibility is unnecessary, since
+ * everyone has access to at least an ASCII-capable terminal and keyboard.
+ *
+ * Rejecting these historical `$`-prefixed escape sequences at the lexer level
+ * with an "unknown token" error is reasonable and expected.
+ */
+#[test]
+fn test_13_invalid_escape_sequence() {
+    let expected = "tests/diagnostics/b_codes/13_invalid_escape_sequence.b:23:9: LEXER ERROR: Unknown token $";
+
+    let output = run_compiler::<&str>(&["tests/diagnostics/b_codes/13_invalid_escape_sequence.b"]);
+
+    assert!(output.contains(&expected.to_string()));
+} 
+
